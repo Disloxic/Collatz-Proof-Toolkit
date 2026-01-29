@@ -12,22 +12,6 @@ The files are provided as standalone HTML documents containing embedded JavaScri
 They allow the user to see how the data is generated and navigated as described in the manuscript.
 
 
-Collatz-Proof-Toolkit/
-│
-├── README.md               
-├── LICENSE.txt
-│             
-├── 01-Odds-Matrix.html
-├── 02-Trajectory-Analysis-Tool.html
-├── 03-Derivation-of-Predecessor-Coordinates.html
-├── 04-Derivation-of-Successor-Coordinates.html
-├── 05-The-Sextant-Matrix-System.html
-├── 06-Node-State-Machine.html
-│  
-└── lib/ (Contains MathJax and styles.css for display purposes)
-
-
-
 ## ⚠️ Instructions for Viewing
 **Please Note:** Zenodo does not render HTML files directly in the browser. To view the interfaces:
 
@@ -116,6 +100,7 @@ If you use this code or the associated paper in your research, please cite the w
   doi          = {10.5281/zenodo.18406397},
   url          = {[https://doi.org/10.5281/zenodo.18406397](https://doi.org/10.5281/zenodo.18406397)}
 }
+
 
 
 
