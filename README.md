@@ -46,7 +46,7 @@ to deterministically derive the correct Coordinate of any predecessor for any n.
 04-Derivation-of-Successor-Coordinates.html
 -------------------------------------------
 Proves how we can use 3 separate lookup matrices for M,i,j, using a series of shifts and patterns that adhere to periodicities of the powers of 2,
-in conjunction with a Sextant Matrix System and  to deterministically derive the correct Coordinate of any Successor for any n. See sections 5.5 to 5.6.
+in conjunction with a Sextant Matrix System to deterministically derive the correct Coordinate of any Successor for any n. See sections 5.5 to 5.6.
 
 
 05-The-Sextant-Matrix-System.html
@@ -100,6 +100,7 @@ If you use this code or the associated paper in your research, please cite the w
   doi          = {10.5281/zenodo.18406397},
   url          = {[https://doi.org/10.5281/zenodo.18406397](https://doi.org/10.5281/zenodo.18406397)}
 }
+
 
 
 
