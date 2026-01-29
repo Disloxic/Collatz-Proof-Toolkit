@@ -1,0 +1,503 @@
+<!--
+Copyright (c) 2026 David Potts
+Author: David Potts (https://orcid.org/0009-0008-1403-8962)
+
+Licensed under the MIT License.
+ -->
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collatz Trajectory Analysis</title>
+	
+    <script id="MathJax-script" async src="lib/mathjax/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --path-a: #27ae60; /* Green */
+            --path-b: #e91e63; /* Pink */
+            --shift: #e67e22;  /* Orange */
+            --special-purple: #8e44ad; /* Purple for 6k+3 */
+            --default-n: #e67e22; /* Default Orange for Col 1 */
+            --bg: #f4f6f8;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            padding: 20px;
+            color: #333;
+        }
+
+        .controls {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            max-width: 950px;
+            margin: 0 auto 30px auto;
+            text-align: center;
+        }
+
+        h2 { margin-top: 0; color: var(--primary); }
+        
+        .stats-bar {
+            margin-top: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--primary);
+            background: #ecf0f1;
+            padding: 8px 16px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid #bdc3c7;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 12px;
+            font-size: 18px;
+            width: 150px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover { background-color: var(--accent); }
+
+        /* --- LEGEND --- */
+        .legend {
+            font-size: 0.85em;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            display: inline-block;
+            border: 1px solid #eee;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+        .legend span { margin: 0 8px; font-weight: bold; }
+
+        /* --- TABLE STYLING --- */
+        .table-wrapper {
+            max-width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            background: var(--white);
+            margin-bottom: 50px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-variant-numeric: tabular-nums;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+        }
+
+        thead th {
+            background-color: var(--primary);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            font-size: 1.5em;
+        }
+
+        /* Column Specifics */
+        .col-idx {
+            background-color: #ecf0f1;
+            font-weight: bold;
+            color: #7f8c8d;
+            border-right: 1px solid #ddd;
+            width: 40px;
+        }
+
+        .col-n { 
+            font-weight: bold; 
+            border-right: 2px solid #ddd; 
+            background-color: #fcfcfc; 
+        }
+        
+        .col-div { 
+            border-left: 2px solid #ddd; 
+            color: #555; 
+            font-weight: normal;
+        }
+
+        /* --- DYNAMIC COLORS --- */
+        .color-purple { color: var(--special-purple) !important; font-weight: 900; }
+        .color-pink   { color: var(--path-b) !important; font-weight: bold; }
+        .color-green  { color: var(--path-a) !important; font-weight: bold; }
+        .color-orange { color: var(--default-n) !important; font-weight: bold; }
+
+        /* Underline for 6k+3 */
+        .is-6k3 {
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-decoration-color: var(--special-purple); 
+            text-underline-offset: 3px;
+        }
+
+        /* Badges */
+        .label-tag {
+            font-size: 0.65em;
+            padding: 3px 6px;
+            border-radius: 4px;
+            vertical-align: middle;
+            margin-left: 8px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+        .tag-mand { background-color: #2c3e50; }
+        .tag-opt { background-color: var(--shift); }
+
+/* Copyright Watermark Styles */
+.copyright-watermark {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Appearance */
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 6px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    color: #4b5563;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.copyright-watermark a {
+    pointer-events: auto;
+    display: flex;
+    text-decoration: none;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>Trajectory Analysis Tool</h2>
+        <p>Enter a starting odd integer (<i>n</i>) to analyze its descent.</p>
+        
+        <div class="input-group">
+            <input type="number" id="inputN" placeholder="e.g. 27" value="27" min="1">
+            <button onclick="runAnalysis()">Analyze</button>
+        </div>
+
+        <div id="statsDisplay" class="stats-bar" style="display:none;">
+            Total Odd Steps to 1: <span id="stepCountVal">0</span>
+        </div>
+
+        <br>
+
+        <div class="legend">
+            <span style="color:var(--special-purple); text-decoration:underline;">6k+3</span> |
+            <span style="color:var(--path-a)">Two 4n+1 iterations from a 6k+3</span> | 
+            <span style="color:var(--path-b)">One 4n+1 iteration from a 6k+3</span> | 
+            <span style="color:var(--default-n)">4n+1 shift occured</span>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th class="col-idx">#</th>
+                    <th>\( n \)</th>
+                    <th>\( 4n + 1 \)</th>
+                    <th>\( 4(4n+1) + 1 \)</th>
+                    
+                    <th>\( \frac{n - 3}{6} \)</th>
+                    
+                    <th>\( \frac{(4n+1)-3}{6} \)</th>
+                    
+                    <th>\( \frac{1}{2} \left[ \frac{4(4n+1)+1 - 3}{6} - 1 \right] \)</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        /*******************************************************
+         * SECTION 1: FORMULAS & UTILS
+         *******************************************************/
+        const Formulas = {
+            isInteger: (num) => Number.isInteger(num),
+            is6kPlus3: (num) => (num % 3 === 0) && (num % 2 !== 0),
+
+            transform_4n1: (n) => 4 * n + 1,
+            transform_SecondOrder: (n) => 4 * (4 * n + 1) + 1,
+            
+            test_Identity: (n) => (n - 3) / 6,
+            test_PathA: (val_4n1) => (val_4n1 - 3) / 6,
+            test_PathB: (val_SecondOrder) => ((val_SecondOrder - 3) / 6 - 1) / 2,
+
+            getNextOddWithSteps: (n) => {
+                if (n === 1) return { next: null, steps: 0 }; 
+                
+                let next = 3 * n + 1;
+                let steps = 1; 
+                
+                while (next % 2 === 0) {
+                    next = next / 2;
+                    steps++; 
+                }
+                return { next: next, steps: steps };
+            },
+
+            get4n1Iterations: (source, target) => {
+                if (source === target) return 0;
+                let count = 0;
+                let temp = source;
+                while (temp < target && count < 20) {
+                    temp = 4 * temp + 1;
+                    count++;
+                    if (temp === target) return count;
+                }
+                return 0;
+            }
+        };
+
+        /*******************************************************
+         * SECTION 2: ANALYSIS & GENERATION
+         *******************************************************/
+        function generateData(startN) {
+            let rows = [];
+            let currentN = startN;
+            let previousN = null; 
+
+            let safetyCounter = 0;
+            while (true && safetyCounter < 3000) {
+                
+                let v_4n1 = Formulas.transform_4n1(currentN);
+                let v_2nd = Formulas.transform_SecondOrder(currentN);
+                
+                let t_Ident = Formulas.test_Identity(currentN); 
+                let t_PathA = Formulas.test_PathA(v_4n1);       
+                let t_PathB = Formulas.test_PathB(v_2nd);       
+
+                let infoA = analyzeShift(t_PathA, previousN);
+                let infoB = analyzeShift(t_PathB, previousN);
+
+                rows.push({
+                    id: currentN, 
+                    n: currentN,
+                    col1: v_4n1,
+                    col2: v_2nd,
+                    test1: t_Ident,
+                    pathA: infoA,
+                    pathB: infoB
+                });
+
+                if (currentN === 1) break;
+
+                previousN = currentN;
+                let result = Formulas.getNextOddWithSteps(currentN);
+                currentN = result.next;
+
+                safetyCounter++;
+            }
+            return rows;
+        }
+
+        function analyzeShift(value, targetN) {
+            if (!Formulas.isInteger(value)) return { valid: false, val: value };
+            
+            let is6k3 = Formulas.is6kPlus3(value);
+            let type = 'match';
+            let iterations = 0;
+
+            if (targetN === null) {
+                type = 'start';
+            } else {
+                if (value !== targetN) {
+                    type = is6k3 ? 'mandatory' : 'optional';
+                    iterations = Formulas.get4n1Iterations(value, targetN);
+                }
+            }
+
+            return {
+                valid: true,
+                val: value,
+                is6k3: is6k3,
+                type: type,
+                iter: iterations
+            };
+        }
+
+        /*******************************************************
+         * SECTION 3: RENDERING & COLOR SYNC
+         *******************************************************/
+        function runAnalysis() {
+            const input = document.getElementById('inputN');
+            let n = parseInt(input.value);
+            
+            // --- VALIDATION START ---
+            if (!n || n < 1) { 
+                alert("Please enter a positive integer."); 
+                return; 
+            }
+            if (n % 2 === 0) {
+                alert("Please enter an odd integer. This tool analyzes trajectories between odd numbers.");
+                return;
+            }
+            // --- VALIDATION END ---
+
+            const data = generateData(n);
+
+            // --- Update Stats Display ---
+            // Odd Steps = Transitions (rows - 1). 
+            const oddSteps = data.length > 0 ? data.length - 1 : 0;
+            document.getElementById('stepCountVal').innerText = oddSteps;
+            document.getElementById('statsDisplay').style.display = 'inline-block';
+            
+            // --- PRE-CALCULATE COLORS FOR COL 1 ---
+            let col1ColorMap = {};
+
+            // A. Base Initialization
+            data.forEach(row => {
+                let color = 'color-orange'; 
+                if (row.n === 1) color = 'color-pink'; 
+                if (Formulas.is6kPlus3(row.n)) color = 'color-purple'; 
+                
+                col1ColorMap[row.n] = color;
+            });
+
+            // B. Sync Loop
+            data.forEach(row => {
+                const updateColor = (val, colorName) => {
+                    if (col1ColorMap[val] && col1ColorMap[val] !== 'color-purple' && col1ColorMap[val] !== 'color-pink') {
+                        col1ColorMap[val] = colorName;
+                    }
+                };
+
+                if (row.pathA.valid) {
+                    let c = (row.pathA.type === 'match') ? 'color-green' : 'color-orange';
+                    updateColor(row.pathA.val, c);
+                }
+
+                if (row.pathB.valid) {
+                    let c = (row.pathB.type === 'match') ? 'color-pink' : 'color-orange';
+                    updateColor(row.pathB.val, c);
+                }
+            });
+
+            // --- RENDER TABLE ---
+            const tbody = document.querySelector('#resultsTable tbody');
+            tbody.innerHTML = '';
+
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+
+                // 1. Index Column
+                const idxCell = `<td class="col-idx">${index + 1}</td>`;
+
+                // 2. Column N Color
+                let nClass = "col-n " + (col1ColorMap[row.n] || 'color-orange');
+                if (Formulas.is6kPlus3(row.n)) nClass += " is-6k3";
+
+                // 3. Columns 2 & 3 (Purple if 6k+3)
+                let classC1 = Formulas.is6kPlus3(row.col1) ? "color-purple is-6k3" : "";
+                let classC2 = Formulas.is6kPlus3(row.col2) ? "color-purple is-6k3" : "";
+
+                // 4. Col 4 - Plain
+                let col4Content = Number.isInteger(row.test1) ? row.test1 : row.test1.toFixed(2);
+                let col4Class = "col-div";
+
+                let html = `
+                    ${idxCell}
+                    <td class="${nClass}">${row.n}</td>
+                    <td class="${classC1}">${row.col1}</td>
+                    <td class="${classC2}">${row.col2}</td>
+                    <td class="${col4Class}">${col4Content}</td>
+                    <td>${renderPathCell(row.pathA, 'color-green')}</td>
+                    <td>${renderPathCell(row.pathB, 'color-pink')}</td>
+                `;
+
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+
+            if(window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function renderPathCell(info, matchColorClass) {
+            if (!info.valid) return info.val.toFixed(2);
+
+            let textClass = matchColorClass; 
+            let badge = "";
+
+            if (info.type === 'mandatory' || info.type === 'optional') {
+                textClass = 'color-orange';
+            }
+
+            if (info.is6k3) {
+                textClass = 'color-purple is-6k3';
+            }
+
+            if (info.type === 'mandatory' || info.type === 'optional') {
+                let label = (info.type === 'mandatory') ? "MAND" : "OPT";
+                let tagClass = (info.type === 'mandatory') ? "tag-mand" : "tag-opt";
+                let extra = "";
+                if (info.iter > 0) extra = ` 4n+1 (${info.iter}x)`;
+                
+                badge = `<span class="label-tag ${tagClass}">${label}${extra}</span>`;
+            } 
+
+            return `<span class="${textClass}">${info.val}</span>${badge}`;
+        }
+
+        window.onload = runAnalysis;
+
+    </script>
+</body>
+
+<div class="copyright-watermark">
+    &copy; 2026 <strong>David Potts</strong> | MIT License
+	<a href="https://orcid.org/0009-0008-1403-8962" target="_blank" style="display: flex;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="65" height="20" role="img" aria-label="ORCID"><title>ORCID</title><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="65" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#r)"><rect width="0" height="20" fill="#555"/><rect x="0" width="65" height="20" fill="#a6ce39"/><rect width="65" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110"><image x="5" y="3" width="14" height="14" href="lib/id.svg"/><text aria-hidden="true" x="415" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="370">ORCID</text><text x="415" y="140" transform="scale(.1)" fill="#fff" textLength="370">ORCID</text></g></svg>
+    </a>
+</div>
+
+</html>

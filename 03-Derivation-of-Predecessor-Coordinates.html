@@ -1,0 +1,584 @@
+<!--
+Copyright (c) 2026 David Potts
+Author: David Potts (https://orcid.org/0009-0008-1403-8962)
+
+Licensed under the MIT License.
+ -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sextant Matrix Predecessor System</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-blue: #3498db;
+            --accent-green: #27ae60;
+            --light-bg: #f4f4f9;
+            --border-color: #dcdde1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+
+        /* INPUT SECTION */
+        .controls-wrapper {
+            background-color: #fff;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-size: 0.9em;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            background-color: #fff;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            color: white;
+        }
+
+        button:active { transform: translateY(2px); }
+        .btn-blue { background-color: var(--primary-color); }
+        .btn-blue:hover { background-color: #34495e; }
+        .btn-green { background-color: var(--accent-green); }
+        .btn-green:hover { background-color: #219150; }
+
+        /* RESULTS SECTION */
+        .results-container {
+            display: flex;
+            margin-top: 25px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            height: 600px; /* Fixed height for scrolling */
+            overflow: hidden;
+            background-color: #fff;
+        }
+
+        /* Sidebar (Chain Path) */
+        .sidebar {
+            width: 350px;
+            background-color: #f8f9fa;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .step-list {
+            overflow-y: auto;
+            flex: 1;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .step-item {
+            padding: 15px;
+            border-bottom: 1px solid #e1e1e1;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .step-item:hover { background-color: #e9ecef; }
+        
+        .step-item.active {
+            background-color: #d6eaf8;
+            border-left: 5px solid var(--accent-blue);
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .step-value {
+            margin-top: 5px;
+            color: #d35400; /* Dark Orange */
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+
+        /* Detail View */
+        .detail-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: #2c3e50; 
+        }
+
+        .log-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            color: #ecf0f1;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+		
+/* Copyright Watermark Styles */
+.copyright-watermark {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    /* Appearance */
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 6px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    color: #4b5563;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.copyright-watermark a {
+    pointer-events: auto;
+    display: flex;
+    text-decoration: none;
+}
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Predecessor Coordinates (Layer 2i)</h1>
+
+    <div class="controls-wrapper">
+        <div class="input-row">
+            <div class="input-group">
+                <label for="matrixM">Matrix (M)</label>
+                <select id="matrixM">
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                    <option value="D">D</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="coordI">Row Index (i)</label>
+                <input type="number" id="coordI" value="1" min="1">
+            </div>
+            <div class="input-group">
+                <label for="coordJ">Column Index (j)</label>
+                <input type="number" id="coordJ" value="1" min="1">
+            </div>
+            <div class="input-group">
+                <label for="maxSteps">Max Steps</label>
+                <input type="number" id="maxSteps" value="100" min="1">
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn-blue" onclick="runSingleStep()">Calculate Single Step</button>
+            <button class="btn-green" onclick="runChain()">Run Chain (Max Steps)</button>
+        </div>
+    </div>
+
+    <div class="results-container">
+        <div class="sidebar">
+            <div class="panel-header">Chain Path</div>
+            <div id="stepList" class="step-list">
+                <div style="padding:20px; color:#999; text-align:center;">No calculations yet.</div>
+            </div>
+        </div>
+
+        <div class="detail-view">
+            <div class="panel-header">Detailed Working Out</div>
+            <div id="logArea" class="log-content">Select a step from the left to view the calculation logic.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- HELPER: CALCULATE LAYER 1 VALUE (Display purposes) ---
+    function calculateLayer1(M_str, i_str, j_str) {
+        const M = M_str.toUpperCase();
+        const i = BigInt(i_str);
+        const j = BigInt(j_str);
+
+        // Ref: 4.1.1
+        const fourPowJ = 4n ** j;
+        const fourPowJPlus1 = 4n ** (j + 1n);
+        const h = (fourPowJPlus1 - 1n) / 3n;
+        const p = fourPowJ / 2n;
+
+        // Ref: 4.1.2
+        const rColIndex = Number((j - 1n) % 3n);
+        const R_matrix_structure = [
+            [h - p, h + 3n*p, h + p],       // Row A
+            [h + p, h - p, h + 3n*p],       // Row B
+            [h + 3n*p, h + p, h - p],       // Row C
+            [h + 2n*p, h + 6n*p, h - 2n*p], // Row D
+            [h - 2n*p, h + 2n*p, h + 6n*p], // Row E
+            [h + 6n*p, h - 2n*p, h + 2n*p]  // Row F
+        ];
+        const matrixMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5 };
+        const rowIndex = matrixMap[M];
+        const R_val = R_matrix_structure[rowIndex][rColIndex];
+
+        // Ref: Eq 7, 8
+        let L1_val;
+        if (['A', 'B', 'C'].includes(M)) {
+            L1_val = R_val + 6n * p * (i - 1n);
+        } else {
+            L1_val = R_val + 12n * p * (i - 1n);
+        }
+        return L1_val;
+    }
+
+    // --- CORE LOGIC ---
+    let chainHistory = []; 
+
+    function calculatePredecessor(M_str, i_str, j_str) {
+        let logBuffer = "";
+        function log(msg) { logBuffer += msg + "\n"; }
+
+        const M = M_str.toUpperCase();
+        const i = BigInt(i_str);
+        const j = BigInt(j_str);
+
+        log(`--- CALCULATION FOR COORDINATES: (${M}, ${i}, ${j}) ---`);
+        
+        // 1. Scaling Parameters
+        // Ref: Definition 4.1.1 [cite: 4]
+        const fourPowJ = 4n ** j;
+        const fourPowJPlus1 = 4n ** (j + 1n);
+        const h = (fourPowJPlus1 - 1n) / 3n;
+        const p = fourPowJ / 2n;
+        
+        log(`1. Scaling Parameters:`);
+        log(`   h = ${h}`);
+        log(`   p = ${p}`);
+
+        // 2. Base Matrix R Lookup
+        // Ref: Definition 4.1.2 [cite: 5]
+        const rColIndex = Number((j - 1n) % 3n);
+        const R_matrix_structure = [
+            [h - p, h + 3n*p, h + p],       // A
+            [h + p, h - p, h + 3n*p],       // B
+            [h + 3n*p, h + p, h - p],       // C
+            [h + 2n*p, h + 6n*p, h - 2n*p], // D
+            [h - 2n*p, h + 2n*p, h + 6n*p], // E
+            [h + 6n*p, h - 2n*p, h + 2n*p]  // F
+        ];
+        const matrixMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4, 'F': 5 };
+        const rowIndex = matrixMap[M];
+        const R_val = R_matrix_structure[rowIndex][rColIndex];
+
+        log(`2. Base Matrix R Lookup:`);
+        log(`   R value = ${R_val}`);
+
+        // 3. Layer 1 Calculation
+        // Ref: Eq 7, 8 [cite: 7, 8]
+        let L1_val;
+        if (['A', 'B', 'C'].includes(M)) {
+            L1_val = R_val + 6n * p * (i - 1n);
+            log(`3. Layer 1 (Left Col): ${L1_val}`);
+        } else {
+            L1_val = R_val + 12n * p * (i - 1n);
+            log(`3. Layer 1 (Right Col): ${L1_val}`);
+        }
+
+        // 4. Layer 2 Calculation (Predecessor Value)
+        // Ref: Eq 9-13 [cite: 13]
+        let L2_val;
+        if (M === 'A' || M === 'D') {
+            L2_val = 4n * L1_val + 1n;
+            log(`4. Layer 2 Value (Predecessor n): ${L2_val}`);
+        } else if (M === 'B' || M === 'E') {
+            L2_val = (4n * L1_val - 1n) / 3n;
+            log(`4. Layer 2 Value (Predecessor n): ${L2_val}`);
+        } else { // C or F
+            L2_val = (2n * L1_val - 1n) / 3n;
+            log(`4. Layer 2 Value (Predecessor n): ${L2_val}`);
+        }
+
+        // 5. Identify Predecessor Matrix (V)
+        // Ref: Cycle Matrices [cite: 16-22]
+        let V;
+        if (M === 'A') {
+            V = 'B'; 
+        } else if (M === 'D') {
+            V = 'E'; 
+        } else {
+            const cycleRow = Number((i - 1n) % 3n);
+            const cycleCol = Number((j - 1n) % 9n);
+            
+            const cycles = {
+                'B': [
+                    ['D', 'F', 'E', 'E', 'D', 'F', 'F', 'E', 'D'],
+                    ['E', 'D', 'F', 'F', 'E', 'D', 'D', 'F', 'E'],
+                    ['F', 'E', 'D', 'D', 'F', 'E', 'E', 'D', 'F']
+                ],
+                'C': [
+                    ['B', 'B', 'C', 'A', 'A', 'B', 'C', 'C', 'A'],
+                    ['A', 'A', 'B', 'C', 'C', 'A', 'B', 'B', 'C'],
+                    ['C', 'C', 'A', 'B', 'B', 'C', 'A', 'A', 'B']
+                ],
+                'E': [
+                    ['E', 'E', 'D', 'F', 'F', 'E', 'D', 'D', 'F'],
+                    ['D', 'D', 'F', 'E', 'E', 'D', 'F', 'F', 'E'],
+                    ['F', 'F', 'E', 'D', 'D', 'F', 'E', 'E', 'D']
+                ],
+                'F': [
+                    ['C', 'A', 'A', 'B', 'C', 'C', 'A', 'B', 'B'],
+                    ['A', 'B', 'B', 'C', 'A', 'A', 'B', 'C', 'C'],
+                    ['B', 'C', 'C', 'A', 'B', 'B', 'C', 'A', 'A']
+                ]
+            };
+            V = cycles[M][cycleRow][cycleCol];
+        }
+        log(`5. Predecessor Matrix V: ${V}`);
+
+        // 6. Calculate Coordinates (q, u)
+        // Ref: Eq 23-25 [cite: 24, 25]
+        let q, u;
+        if (M === 'A' || M === 'D') {
+            q = i;
+            u = j + 1n; // Lateral Case 3
+            log(`6. Lateral Coordinates: q=i, u=j+1`);
+        } else {
+            // Ascending Logic
+            const j_v = 1n;
+            const h_v = (4n**(j_v+1n) - 1n) / 3n; 
+            const p_v = (4n**j_v) / 2n;           
+            const R_struct_v = [
+                h_v - p_v,    // A
+                h_v + p_v,    // B
+                h_v + 3n*p_v, // C
+                h_v + 2n*p_v, // D
+                h_v - 2n*p_v, // E
+                h_v + 6n*p_v  // F
+            ];
+            const row_v = matrixMap[V];
+            const V1_1_1 = R_struct_v[row_v];
+            
+            // Difference (Numerator for T calculation)
+            const diff = L2_val - V1_1_1;
+            
+            log(`6. Ascending Calculation:`);
+            log(`   diff = (L2 - V_base) = ${L2_val} - ${V1_1_1} = ${diff}`);
+
+            u = 1n;
+            if (M === 'B' || M === 'E') {
+                // Case 1: q = 1 + T
+                const T = diff / 24n;
+                q = 1n + T; 
+                log(`   Case B/E: q = 1 + (diff / 24) = ${q}`);
+            } else {
+                // Case 2: q = 1 + 2T
+                // FIX: Multiply by 2 BEFORE dividing to prevent integer truncation
+                const scaledDiff = 2n * diff;
+                const T_term = scaledDiff / 24n;
+                q = 1n + T_term; 
+                log(`   Case C/F: q = 1 + (2 * diff) / 24 = 1 + ${scaledDiff}/24 = ${q}`);
+            }
+        }
+
+        log(`\nRESULT: V=${V}, q=${q}, u=${u}`);
+        
+        return {
+            M_out: V,
+            i_out: q.toString(),
+            j_out: u.toString(),
+            log: logBuffer
+        };
+    }
+
+    // --- UI HANDLERS ---
+
+    function runSingleStep() {
+        const M = document.getElementById('matrixM').value;
+        const i = document.getElementById('coordI').value;
+        const j = document.getElementById('coordJ').value;
+        
+        chainHistory = []; 
+        
+        // 0. Initial Node
+        const n_start = calculateLayer1(M, i, j);
+        addStepToHistory(0, M, i, j, n_start, "Start Node (Input)");
+
+        // 1. Calculate Predecessor
+        try {
+            const result = calculatePredecessor(M, i, j);
+            
+            // Calculate Layer 1 for the RESULT coordinate
+            const n_res = calculateLayer1(result.M_out, result.i_out, result.j_out);
+            
+            addStepToHistory(1, result.M_out, result.i_out, result.j_out, n_res, result.log);
+            renderUI(1); 
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+
+    function runChain() {
+        let M = document.getElementById('matrixM').value;
+        let i = document.getElementById('coordI').value;
+        let j = document.getElementById('coordJ').value;
+        const max = parseInt(document.getElementById('maxSteps').value, 10);
+
+        chainHistory = [];
+        
+        // 0. Initial Node
+        const n_start = calculateLayer1(M, i, j);
+        addStepToHistory(0, M, i, j, n_start, "Start Node (Input)");
+
+        try {
+            for(let k=1; k <= max; k++) {
+                const result = calculatePredecessor(M, i, j);
+                // Update inputs for next loop
+                M = result.M_out;
+                i = result.i_out;
+                j = result.j_out;
+                
+                // Calculate n for this new step result
+                const n_step = calculateLayer1(M, i, j);
+                
+                addStepToHistory(k, M, i, j, n_step, result.log);
+            }
+            renderUI(chainHistory.length - 1); 
+        } catch (e) {
+            alert("Error in chain: " + e.message);
+        }
+    }
+
+    function addStepToHistory(index, M, i, j, n, logText) {
+        chainHistory.push({
+            index: index,
+            coords: `(${M}, ${i}, ${j})`,
+            val: n.toString(),
+            log: logText
+        });
+    }
+
+    function renderUI(selectedIndex = 0) {
+        const listContainer = document.getElementById('stepList');
+        const logContainer = document.getElementById('logArea');
+        
+        listContainer.innerHTML = "";
+        
+        chainHistory.forEach((step, idx) => {
+            const item = document.createElement('li');
+            item.className = 'step-item';
+            if(idx === selectedIndex) item.classList.add('active');
+            
+            item.innerHTML = `
+                <div class="step-header">
+                    <span class="step-idx">#${step.index}</span>
+                    <span class="step-coords">${step.coords}</span>
+                </div>
+                <div class="step-value">n = ${step.val}</div>
+            `;
+            
+            item.onclick = () => {
+                document.querySelectorAll('.step-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+                logContainer.textContent = step.log;
+            };
+
+            listContainer.appendChild(item);
+        });
+
+        if(chainHistory[selectedIndex]) {
+            logContainer.textContent = chainHistory[selectedIndex].log;
+        }
+    }
+
+</script>
+
+</body>
+
+<div class="copyright-watermark">
+    &copy; 2026 <strong>David Potts</strong> | MIT License
+	<a href="https://orcid.org/0009-0008-1403-8962" target="_blank" style="display: flex;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="65" height="20" role="img" aria-label="ORCID"><title>ORCID</title><linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><clipPath id="r"><rect width="65" height="20" rx="3" fill="#fff"/></clipPath><g clip-path="url(#r)"><rect width="0" height="20" fill="#555"/><rect x="0" width="65" height="20" fill="#a6ce39"/><rect width="65" height="20" fill="url(#s)"/></g><g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110"><image x="5" y="3" width="14" height="14" href="lib/id.svg"/><text aria-hidden="true" x="415" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="370">ORCID</text><text x="415" y="140" transform="scale(.1)" fill="#fff" textLength="370">ORCID</text></g></svg>
+    </a>
+</div>
+
+</html>
